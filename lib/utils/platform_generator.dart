@@ -6,18 +6,18 @@ class PlatformGenerator {
   static List<Platform> generateInitialPlatforms() {
     List<Platform> platforms = [];
 
-    // Starting platform - make it bigger for easier start
+    // Starting platform - thin and curved upwards
     platforms.add(
       Platform(
         x: 0,
         y: 400,
         width: 400,
-        height: GameConstants.platformHeight,
-        type: PlatformType.normal,
+        height: 20, // thin height
+        type: PlatformType.curved,
+        curveDirection: CurveDirection.up,
       ),
     );
 
-    // Generate initial platforms with better spacing
     double currentX = 400;
     double currentY = 400;
 
@@ -41,18 +41,14 @@ class PlatformGenerator {
           math.Random().nextDouble() *
               (GameConstants.maxPlatformWidth - GameConstants.minPlatformWidth);
 
-      PlatformType type = PlatformType.normal;
-      if (math.Random().nextDouble() > 0.8) {
-        type = PlatformType.curved;
-      }
-
       platforms.add(
         Platform(
           x: currentX,
           y: currentY,
           width: width,
-          height: GameConstants.platformHeight,
-          type: type,
+          height: 20,
+          type: PlatformType.curved,
+          curveDirection: CurveDirection.up,
         ),
       );
 
@@ -82,17 +78,13 @@ class PlatformGenerator {
         math.Random().nextDouble() *
             (GameConstants.maxPlatformWidth - GameConstants.minPlatformWidth);
 
-    PlatformType type = PlatformType.normal;
-    if (math.Random().nextDouble() > 0.8) {
-      type = PlatformType.curved;
-    }
-
     return Platform(
       x: nextX,
       y: nextY,
       width: width,
-      height: GameConstants.platformHeight,
-      type: type,
+      height: 20,
+      type: PlatformType.curved,
+      curveDirection: CurveDirection.up,
     );
   }
 }

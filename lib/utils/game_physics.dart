@@ -32,47 +32,48 @@ class GamePhysics {
       if (isOnGround) {
         // Ground movement
         velocityX += GameConstants.groundAcceleration;
-        // Jump only if we're clearly on ground and not already jumping
-        if (velocityY > -2) {
-          velocityY = GameConstants.jumpPower;
-        }
+        // Jump only if not already jumping or falling too fast
+        // if (velocityY > -2) {
+        //   velocityY = GameConstants.jumpPower;
+        // }
       } else {
-        // Air movement
+        // Air movement (spin and accelerate)
         velocityX += GameConstants.airAcceleration;
         angularVelocity += GameConstants.spinSpeed;
       }
     }
 
-    // Apply physics based on ground state
     if (isOnGround) {
-      // Ground physics
+      // Friction and minimal forward speed
       velocityX *= GameConstants.friction;
-      velocityX = math.max(velocityX, baseSpeed); // Maintain minimum speed
+      velocityX = math.max(velocityX, baseSpeed);
 
-      // Auto-level the bike when on ground
-      angularVelocity *= 0.7; // Dampen rotation
-      double levelingForce = -rotation * 0.15; // Stronger leveling
+      // Auto-level bike gently on ground
+      angularVelocity *= 0.7;
+      double levelingForce = -rotation * 0.15;
       angularVelocity += levelingForce;
     } else {
-      // Air physics
+      // Air resistance when in air
       velocityX *= GameConstants.airResistance;
     }
 
-    // Apply angular velocity to rotation
+    // Update rotation
     rotation += angularVelocity;
+
+    // Damp rotation speed
     angularVelocity *= GameConstants.rotationDamping;
 
-    // Limit rotation speed
-    angularVelocity = math.max(-12, math.min(12, angularVelocity));
+    // Clamp angular velocity to prevent wild spinning
+    angularVelocity = angularVelocity.clamp(-12.0, 12.0);
 
-    // Limit horizontal speed
-    velocityX = math.min(velocityX, GameConstants.maxSpeed);
+    // Clamp horizontal speed
+    velocityX = velocityX.clamp(0.0, GameConstants.maxSpeed);
 
-    // Update position
+    // Update player position
     double playerX = getPlayerX() + velocityX;
     double playerY = getPlayerY() + velocityY;
 
-    // Set updated values
+    // Save updated values
     setVelocityY(velocityY);
     setVelocityX(velocityX);
     setAngularVelocity(angularVelocity);
@@ -90,39 +91,47 @@ class GamePhysics {
     required Function() onLanding,
     required Function() onCrash,
   }) {
-    // Player collision box
     double playerLeft = playerX - 15;
     double playerRight = playerX + 15;
     double playerTop = playerY - 10;
     double playerBottom = playerY + 10;
 
     for (Platform platform in platforms) {
-      // Check if player is overlapping with platform
-      if (playerRight > platform.x &&
-          playerLeft < platform.x + platform.width &&
-          playerBottom > platform.y &&
-          playerTop < platform.y + platform.height) {
-        // Only check landing if falling down onto platform
-        if (velocityY > 0 && playerBottom - velocityY <= platform.y + 5) {
-          // Much more forgiving landing - only crash if completely upside down
+      bool horizontallyOverlapping =
+          playerRight > platform.x && playerLeft < platform.x + platform.width;
+      bool verticallyOverlapping =
+          playerBottom > platform.y && playerTop < platform.y + platform.height;
+
+      if (horizontallyOverlapping && verticallyOverlapping) {
+        // Landing check: only if player is falling and just about to land
+        bool isLandingSurface =
+            velocityY > 0 && (playerBottom - velocityY) <= (platform.y + 5);
+
+        if (isLandingSurface) {
+          // Normalize rotation to -180..180 degrees
           double normalizedRotation = rotation % 360;
           if (normalizedRotation > 180) normalizedRotation -= 360;
           if (normalizedRotation < -180) normalizedRotation += 360;
 
-          // Only crash if nearly upside down (between 150-210 degrees)
+          // Crash only if nearly upside down (abs rotation > 150°)
           if (normalizedRotation.abs() > 150) {
             onCrash();
             return false;
           }
 
-          // Successful landing
+          // Otherwise, safe landing
           onLanding();
           return true;
         }
-        // Side collision - only if clearly hitting from side
-        else if (velocityY < 2 &&
-            (playerLeft < platform.x + 5 ||
-                playerRight > platform.x + platform.width - 5)) {
+
+        // Side collision check (only if player is NOT falling fast and hits platform edges)
+        bool hittingLeftEdge =
+            playerLeft < platform.x + 5 && velocityY.abs() < 1;
+        bool hittingRightEdge =
+            playerRight > platform.x + platform.width - 5 &&
+            velocityY.abs() < 1;
+
+        if (hittingLeftEdge || hittingRightEdge) {
           onCrash();
           return false;
         }

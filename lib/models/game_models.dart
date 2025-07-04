@@ -1,11 +1,14 @@
 enum PlatformType { normal, curved }
 
+enum CurveDirection { up, down }
+
 class Platform {
   final double x;
   final double y;
   final double width;
   final double height;
   final PlatformType type;
+  final CurveDirection? curveDirection;
 
   Platform({
     required this.x,
@@ -13,6 +16,7 @@ class Platform {
     required this.width,
     required this.height,
     required this.type,
+    this.curveDirection,
   });
 }
 
