@@ -8,11 +8,13 @@ import '../utils/platform_generator.dart';
 import '../utils/game_physics.dart';
 
 class GameScreen extends StatefulWidget {
+  const GameScreen({Key? key}) : super(key: key);
+
   @override
-  _GameScreenState createState() => _GameScreenState();
+  GameScreenState createState() => GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
+class GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   late Timer _gameTimer;
 
   // Game state
@@ -29,7 +31,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   double _angularVelocity = 0.0;
   bool _isOnGround = false;
   bool _isPressed = false;
-  List<TrailPoint> _trail = [];
+  final List<TrailPoint> _trail = [];
 
   // Platforms
   List<Platform> _platforms = [];
@@ -40,7 +42,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   double _screenHeight = 0;
 
   // Effects
-  List<ScoreEffect> _scoreEffects = [];
+  final List<ScoreEffect> _scoreEffects = [];
 
   @override
   void initState() {
@@ -97,7 +99,27 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     _cameraOffset = math.max(0, _playerX - _screenWidth * 0.3);
 
     // Check collisions
-    _checkCollisions();
+    GamePhysics.checkCollisions(
+      playerX: _playerX,
+      playerY: _playerY,
+      velocityY: _velocityY,
+      rotation: _rotation,
+      platforms: _platforms,
+      onLanding: () {
+        _playerY = _findLandingPlatform()!.y - 10;
+        _velocityY = 0;
+        _isOnGround = true;
+
+        // Landing bonus
+        int landingBonus = 5;
+        // Bonus for spinning
+        if (_angularVelocity.abs() > 3) {
+          landingBonus += 10;
+        }
+        _addScoreEffect(landingBonus);
+      },
+      onCrash: () => _gameOver(),
+    );
 
     // Generate new platforms
     _generatePlatformsIfNeeded();
@@ -120,8 +142,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   void _updatePlayerPhysics() {
-    bool wasOnGround = _isOnGround;
-
     GamePhysics.updatePlayerPhysics(
       isPressed: _isPressed,
       isOnGround: _isOnGround,
@@ -163,34 +183,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     if (_trail.length > GameConstants.maxTrailLength) {
       _trail.removeAt(0);
     }
-  }
-
-  void _checkCollisions() {
-    bool wasOnGround = _isOnGround;
-
-    bool landed = GamePhysics.checkCollisions(
-      playerX: _playerX,
-      playerY: _playerY,
-      velocityY: _velocityY,
-      rotation: _rotation,
-      platforms: _platforms,
-      onLanding: () {
-        _playerY = _findLandingPlatform()!.y - 10;
-        _velocityY = 0;
-        _isOnGround = true;
-
-        // Landing bonus
-        if (!wasOnGround) {
-          int landingBonus = 5;
-          // Bonus for spinning
-          if (_angularVelocity.abs() > 3) {
-            landingBonus += 10;
-          }
-          _addScoreEffect(landingBonus);
-        }
-      },
-      onCrash: () => _gameOver(),
-    );
   }
 
   void _gameOver() {
@@ -278,7 +270,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF1a0a2e),
+      backgroundColor: const Color(0xFF1a0a2e),
       body: LayoutBuilder(
         builder: (context, constraints) {
           _screenWidth = constraints.maxWidth;
@@ -332,7 +324,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 child: Center(
                   child: Text(
                     '$_score',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 48,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -358,9 +350,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       center: Alignment.center,
                       radius: 1.0,
                       colors: [
-                        Color(0xFF1a0a2e).withOpacity(0.9),
-                        Color(0xFF16213e).withOpacity(0.95),
-                        Colors.black.withOpacity(0.98),
+                        const Color(0xFF1a0a2e).withAlpha((0.9 * 255).toInt()),
+                        const Color(0xFF16213e).withAlpha((0.95 * 255).toInt()),
+                        Colors.black.withAlpha((0.98 * 255).toInt()),
                       ],
                     ),
                   ),
@@ -370,7 +362,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       children: [
                         Text(
                           _isGameOver ? 'GAME OVER' : 'RIDER',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 64,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -383,46 +375,39 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                             ],
                           ),
                         ),
-                        SizedBox(height: 30),
+                        const SizedBox(height: 30),
                         if (_isGameOver) ...[
                           Text(
                             'Score: $_score',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 36,
                               color: Colors.white,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          SizedBox(height: 40),
+                          const SizedBox(height: 40),
                         ],
                         Container(
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
+                            gradient: const LinearGradient(
                               colors: [Colors.cyan, Colors.blue],
                             ),
                             borderRadius: BorderRadius.circular(30),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.cyan.withOpacity(0.5),
+                                color: Colors.cyan.withAlpha(
+                                  (0.5 * 255).toInt(),
+                                ),
                                 blurRadius: 20,
                                 spreadRadius: 2,
                               ),
                             ],
                           ),
                           child: ElevatedButton(
-                            onPressed: _startGame,
-                            child: Text(
-                              _isGameOver ? 'RETRY' : 'START',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
                               shadowColor: Colors.transparent,
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: 50,
                                 vertical: 20,
                               ),
@@ -430,20 +415,29 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                 borderRadius: BorderRadius.circular(30),
                               ),
                             ),
+                            onPressed: _startGame,
+                            child: Text(
+                              _isGameOver ? 'RETRY' : 'START',
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
                         ),
-                        SizedBox(height: 40),
+                        const SizedBox(height: 40),
                         Container(
-                          padding: EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withAlpha((0.3 * 255).toInt()),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: Colors.cyan.withOpacity(0.3),
+                              color: Colors.cyan.withAlpha((0.3 * 255).toInt()),
                               width: 1,
                             ),
                           ),
-                          child: Text(
+                          child: const Text(
                             'Hold to accelerate and jump\nHold in air to spin and perform tricks\nLand upright to avoid crashing!\nAvoid landing upside down!',
                             textAlign: TextAlign.center,
                             style: TextStyle(
