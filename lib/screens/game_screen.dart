@@ -8,7 +8,7 @@ import '../utils/platform_generator.dart';
 import '../utils/game_physics.dart';
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({Key? key}) : super(key: key);
+  const GameScreen({super.key});
 
   @override
   GameScreenState createState() => GameScreenState();
@@ -66,7 +66,7 @@ class GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       _isGameOver = false;
       _score = 0;
       _playerX = 100.0;
-      _playerY = 300.0;
+      _playerY = 150.0;
       _velocityX = 0.0;
       _velocityY = 0.0;
       _rotation = 0.0;
@@ -257,7 +257,7 @@ class GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     double width = 120 + math.Random().nextDouble() * 80;
 
-    PlatformType type = PlatformType.normal;
+    PlatformType type = PlatformType.flat;
     if (math.Random().nextDouble() > 0.8) {
       type = PlatformType.curved;
     }

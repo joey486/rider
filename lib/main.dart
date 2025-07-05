@@ -6,6 +6,8 @@ void main() {
 }
 
 class RiderGame extends StatelessWidget {
+  const RiderGame({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

@@ -7,7 +7,7 @@ class GameConstants {
   static const double maxSpeed = 8.0;
   static const double friction = 0.95;
   static const double airResistance = 0.998;
-  static const double spinSpeed = 6.0;
+  static const double spinSpeed = 2.0;
   static const double rotationDamping = 0.92;
 
   // Game settings
